@@ -3,8 +3,7 @@ import React, { Component } from 'react';
 import { StyleSheet, Alert, FlatList, View, ActivityIndicator } from 'react-native';
 import { Container, Content, Footer, FooterTab, Button, Icon, Text, List, ListItem, Left, Right, Header, Body } from 'native-base';
 import {auth, firestore, storage,db} from '../config/Firebase';
-//import { removeJob } from '../../service/DataService'
-import firestore from '@react-native-firebase/firestore';
+
 
 //let job = db.ref('/Job');
 
@@ -84,7 +83,7 @@ export default class MyJob extends Component {
                     <Text style={{ textAlign: "center", height: 40, fontWeight: "bold", marginTop: 20 }}>Job List</Text>
                     <FlatList
                         data={this.state.jobs}
-
+                        style={{padding:10}}
                         renderItem={({ item, index }) => {
                             return (
                                 <ListItem key={index}
@@ -131,7 +130,7 @@ export default class MyJob extends Component {
 
                 <Footer>
                     <FooterTab>
-                        <Button vertical onPress={() => { this.props.navigation.navigate('UploadJob') }}>
+                        <Button vertical onPress={() => { this.props.navigation.navigate('PostJob') }}>
                             <Icon name="md-briefcase" />
                             <Text>New Job</Text>
                         </Button>

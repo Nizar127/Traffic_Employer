@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
     StyleSheet, ScrollView, Image, FlatList,
     UIManager, Animated,
-    LayoutAnimation, TextInput, Modal, TouchableHighlight
+    LayoutAnimation, TextInput, Modal, TouchableHighlight, 
 } from 'react-native';
 import {
     Container,
@@ -23,7 +23,7 @@ import {
     Separator,
     Button
 } from 'native-base';
-import {db, auth, storage, firestore} from '../../config/Firebase';
+import {db, auth, storage, firestore} from '../config/Firebase';
 
 import { Alert } from 'react-native';
 
@@ -42,6 +42,8 @@ export default class Profile extends Component {
             skills: [],
             experience: [],
             username: '',
+            fullname: '',
+            email: '',
             key: '',
             phonenumber: '',
             profileImage: '',
@@ -69,13 +71,15 @@ export default class Profile extends Component {
     componentDidMount() {
         this.unsubscribe = firestore.collection('Employer').doc(auth.currentUser.uid).onSnapshot(doc => {
             console.log(doc);
-            const { fullname, phoneNum, url, address, description, keyplayers, project } = doc.data();
+            const { email, fullname, phoneNum, url, address, description, skills} = doc.data();
             this.setState({
+                email,
                 fullname,
                 description,
                 phoneNum,
                 url,
-                address
+                address,
+                skills
             })
         });
         //this.unsubscribe = firebase.firestore().collection('Users').onSnapshot(this.getCollection);
@@ -147,9 +151,7 @@ export default class Profile extends Component {
 
     render() {
         return (
-            // this.state.users.map((item, index) => {
-            //     return (
-            <View style={{ flex: 1 }} /* key={index} */>
+            <View style={{ flex: 1 }}>
                 <ScrollView>
                     <Card>
                         <CardItem cardBody>
@@ -158,18 +160,32 @@ export default class Profile extends Component {
                         </CardItem>
                         <CardItem>
                             <Body>
-                                <Text style={{ fontSize: 20, fontWeight: 'bold', justifyContent: 'center' }}>{this.state.username ? this.state.username : auth.currentUser.email}</Text>
+                                <Text style={{ fontSize: 20, fontWeight: 'bold', justifyContent: 'center' }}>{this.state.fullname ? this.state.fullname : auth.currentUser.email}</Text>
                             </Body>
                         </CardItem>
 
 
                     </Card>
 
-                   <Card style={{ height: 100 }}>
-                        <CardItem cardBody bordered button onPress={() => this.props.navigation.navigate('MyJob')}>
-                            <Text style={{ justifyContent: 'center', fontSize: 17 }}>Click Here to View Your Uploaded Job</Text>
+                    <Card style={{ height: 80 }}>
+                    <CardItem header bordered>
+                            <Text>Email</Text>
+                        </CardItem>
+                        <CardItem cardBody bordered button>
+                            <Text style={{ margin: 30, fontWeight: 'bold'}}>{this.state.email}</Text>
                         </CardItem>
                     </Card> 
+
+                   <Card style={{ height: 100 }}>
+                   <CardItem header bordered>
+                            <Text>My Application</Text>
+                        </CardItem>
+                        <CardItem cardBody bordered button onPress={() => this.props.navigation.navigate('MyJob')}>
+                            <Text style={{ margin: 30}}>Click Here to View Your Uploaded Job</Text>
+                        </CardItem>
+                    </Card> 
+
+
 
                     <Card style={{ height: 200 }}>
                         <CardItem header bordered>
@@ -189,7 +205,7 @@ export default class Profile extends Component {
                         </CardItem>
                         <CardItem cardBody bordered button>
                             <Body>
-                                <Text style={{ margin: 30 }}>{this.state.phonenumber}</Text>
+                                <Text style={{ margin: 30,}}>{this.state.phoneNum}</Text>
 
                             </Body>
                         </CardItem>
@@ -207,17 +223,35 @@ export default class Profile extends Component {
                         </CardItem>
                     </Card>
 
-                    
+
+                     <Card>
+                        <CardItem header bordered>
+
+                            <Text>Skills</Text>
+                        </CardItem>
+                        <CardItem cardBody>
+                            <Content>
+                                {
+                                     this.state.skills &&                      
+                                    this.state.skills.map((p, i) => (
+                                        <ListItem key={i}>
+                                            <Text>
+                                                {p}
+                                            </Text>
+                                        </ListItem>
+                                    )) 
+                                }
+
+                            </Content>
+                        </CardItem>
+                    </Card>
+                     
 
 
 
                     <Card>
 
-                        <Button block primary last style={{ marginTop: 20, marginBottom: 5 }} onPress={() => {
-                            this.props.navigation.navigate('EditProfileJobSeeker' , {
-                                userkey: item.key
-                            }); 
-                        }}>
+                        <Button block primary last style={{ marginTop: 20, marginBottom: 5 }} onPress={() => this.props.navigation.navigate('EditProfileJobCreator')}>
                             <Text style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'montserrat' }}>Edit Profile</Text>
                         </Button>
 
@@ -226,9 +260,6 @@ export default class Profile extends Component {
                 </ScrollView>
 
             </View>
-            //     )
-
-            // })
         )
     }
 }
@@ -300,5 +331,3 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     }
 })
-
-

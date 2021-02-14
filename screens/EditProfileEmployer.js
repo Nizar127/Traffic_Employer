@@ -2,10 +2,12 @@ import React, { Component } from 'react';
 import {
     StyleSheet, ScrollView, Image, FlatList,
     UIManager, Animated,
-    LayoutAnimation, TextInput, Modal, TouchableHighlight
+    LayoutAnimation, TextInput, Modal, TouchableHighlight,
+     ActivityIndicator
 } from 'react-native';
-import ImagePicker from 'react-native-image-crop-picker';
+import * as ImagePicker from 'expo-image-picker';
 import {
+
     Container,
     Header,
     Content,
@@ -23,11 +25,12 @@ import {
     Separator,
     Item,
     Label,
-    Button
+    Button,
+    Textarea
 } from 'native-base';
 import Icon from '@expo/vector-icons/Ionicons';
-import {auth, firestore, storage} from '../config/Firebase';
-import ImgToBase64 from 'react-native-image-base64'
+import {db, auth, storage, firestore} from '../config/Firebase';
+import uuid from 'react-native-uuid';
 import { Alert } from 'react-native';
 
 console.disableYellowBox = true;
@@ -44,6 +47,7 @@ export default class EditProfileJobCreator extends Component {
             textInput: [],
             inputData: [],
             username: '',
+            fullname: '',
             phonenumber: '',
             profileImage: '',
             keyplayer: '',
@@ -54,102 +58,200 @@ export default class EditProfileJobCreator extends Component {
             url: '',
             imageType: '',
             worktype: '',
-            salary: '',
-            peoplenum: '',
-            time: 0,
             show: true,
-            project: ''
+            skills: '',
+            experience: '',
             //listViewData: data,
 
 
         };
         this.pickImage = this.pickImage.bind(this);
-        this.uploadImage = this.uploadImage.bind(this);
         this.updateUser = this.updateUser.bind(this);
 
     }
 
-
-
-    //Pick Image from camera or library
-    pickImage() {
-        ImagePicker.openPicker({
-            width: 300,
-            height: 180,
-            cropping: true
-        }).then(image => {
-            console.log(image, 'image')
-            this.setState({
-                url: image.path,
-                imageType: image.mime
-
-            })
-        }).catch((error) => {
-            console.log(error)
-        })
-    }
-
-
-    uploadImage() {
-        return new Promise((resolve, reject) => {
-            const appendIDToImage = new Date().getTime();
-            const storageRef = storage.ref('thumbnails_job').child(`${appendIDToImage}`);
-
-            // [anas]
-            const task = ImgToBase64.getBase64String(this.state.url)
-                .then(base64String => {
-                    console.log("[uploadImage] Start upload image to firebase storage");
-                    console.log("[uploadImage] base64String", !!base64String);
-
-                    // .put accept blob, putString accept string
-                    // https://firebase.google.com/docs/reference/js/firebase.storage.Reference#put
-                    storageRef.putString(base64String, 'base64')
-                        .then((imageSnapshot) => {
-                            console.log('[uploadImage] Image Upload Successfully');
-
-                            storage
-                                .ref(imageSnapshot.metadata.fullPath)
-                                .getDownloadURL()
-                                .then((downloadURL) => {
-                                    console.log("[uploadImage] downloadURL", downloadURL);
-                                    // setAllImages((allImages) => [...allImages, downloadURL]);
-                                    //this.dbRef.doc(this).update({ imageURL: downloadURL });
-                                    resolve(downloadURL);
-                                });
-
-                        }).catch(e => {
-                            console.error("[uploadImage] Put storageRef failed");
-                            console.error(e);
-                            reject("");
-                        });
-
-                }).catch(e => {
-                    console.error("[uploadImage] Get base 64 string failed");
-                    console.error(e);
-                    reject("");
-                });
+    _maybeRenderUploadingOverlay = () => {
+        if (this.state.uploading) {
+          return (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                },
+              ]}>
+              <ActivityIndicator color="#fff" animating size="large" />
+            </View>
+          );
+        }
+      };
+      _maybeRenderImage = () => {
+        let { url } = this.state;
+        if (!url) {
+          return;
+        }
+    
+        return (
+          <View
+            style={{
+              marginTop: 10,
+              marginBottom: 10,
+              width: 350,
+              height: 250,
+              borderRadius: 3,
+              elevation: 2,
+            }}>
+            <View
+              style={{
+                borderTopRightRadius: 3,
+                borderTopLeftRadius: 3,
+                shadowColor: '#8d8f92',
+                borderColor: '#8d8f92',
+                elevation: 4,
+                borderWidth:5,
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 4, height: 4 },
+                shadowRadius: 5,
+                overflow: 'hidden',
+              }}>
+              <Image source={{ uri: url }} style={{ width: null, height: 250 }} />
+            </View>
+          </View>
+        );
+    };
+  
+      _takePhoto = async () => {
+        let pickerResult = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
         });
+    
+        this._handleImagePicked(pickerResult);
+      };
+
+
+      _handleImagePicked = async pickerResult => {
+        try {
+          this.setState({ uploading: true });
+    
+          if (!pickerResult.cancelled) {
+            const uploadUrl = await uploadImageAsync(pickerResult.uri);
+            this.setState({ url: uploadUrl });
+          }
+        } catch (e) {
+          console.log(e);
+          alert('Upload failed, sorry :(');
+        } finally {
+          this.setState({ uploading: false });
+        }
+      };
+    //function to add TextInput dynamically
+    addTextInput = (index) => {
+        let textInput = this.state.textInput;
+        textInput.push(
+            <View key={index} style={{ flexDirection: 'row', margin: 5 }}>
+                <TextInput style={styles.startRouteBtn} onChangeText={(text) => this.addValues(text, index)} />
+                <Icon android name="md-remove" size={30} style={{ marginTop: 30 }} onPress={() => this.removeTextInput()} />
+            </View>
+
+        );
+        this.setState({ textInput });
     }
+
+    //function to remove TextInput dynamically
+    removeTextInput = () => {
+        let textInput = this.state.textInput;
+        let inputData = this.state.inputData;
+        textInput.pop();
+        inputData.pop();
+        this.setState({ textInput, inputData });
+    }
+
+    //function to add text from TextInputs into single array
+    addValues = (text, index) => {
+        let dataArray = this.state.inputData;
+        let checkBool = false;
+        if (dataArray.length !== 0) {
+            dataArray.forEach(element => {
+                if (element.index === index) {
+                    element.text = text;
+                    checkBool = true;
+                }
+            });
+        }
+        if (checkBool) {
+            this.setState({
+                inputData: dataArray
+            });
+        }
+        else {
+            dataArray.push({ 'text': text, 'index': index });
+            this.setState({
+                inputData: dataArray
+            });
+        }
+    }
+
+    //function to console the output
+    getValues = () => {
+        console.log('Data', this.state.inputData);
+    }
+
+
+
+    inputValueUpdate = (val, prop) => {
+        const state = this.state;
+        state[prop] = val;
+        this.setState(state);
+    }
+
+
+    pickImage = async() => {
+        let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+        if (permissionResult.granted === false) {
+          alert('Permission to access camera roll is required!');
+          return;
+        }
+    
+        let pickerResult = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+    
+        this._handleImagePicked(pickerResult);
+    
+    }
+
+
 
 
     updateUser = () => {
 
+        let skills = [this.state.skills];
+        for (let index = 0; index < this.state.inputData.length; index++) {
+            const element = this.state.inputData[index];
+            skills.push(element.text);
 
-        const updateDBRef = firestore.collection('Users').doc(auth.currentUser.uid);
+        }
+        console.log('skills', skills);
 
-        this.uploadImage().then(firebaseUrl => {
-            console.log("[saveData] firebaseUrl", firebaseUrl);
-            console.log("[saveData] Start add to firebase");
+        const updateDBRef = firestore.collection('Employer').doc(auth.currentUser.uid);
 
             updateDBRef.update({
-                username: this.state.username,
-                profileimage: this.state.profileImage,
+                fullname: this.state.username,
                 description: this.state.description,
-                url: firebaseUrl
+                skills: skills,
+                url: this.state.url
             }).then((docRef) => {
+
                 this.props.navigation.navigate('Profile');
             })
-        })
+    
 
     }
 
@@ -168,14 +270,24 @@ export default class EditProfileJobCreator extends Component {
                 <ScrollView>
                     <Card>
                         <CardItem cardBody>
-                            <Image source={{ uri: this.state.url ? this.state.url : auth.currentUser.photoURL }} style={{ height: 200, width: null, flex: 1 }} />
-
+{/*                           <Image source={{ uri: this.state.url ? this.state.url : auth.currentUser.photoURL }} style={{ height: 200, width: null, flex: 1 }} />
+ */}
+                            {this._maybeRenderImage()}
+                            {this._maybeRenderUploadingOverlay()}
                         </CardItem>
-                        <Button block iconLef style={{ backgroundColor: 'blue' }}
-                            onPress={this.pickImage}>
-                            <Icon name="md-image" />
-                            <Text style={{ textAlign: 'center' }}>Change Thumbnail</Text>
-                        </Button>
+                        <View style={{marginBottom: 20, flexDirection: 'row', justifyContent: 'center'}}>
+                            <Button iconLef style={{ backgroundColor: '#1B6951', padding: 10, margin: 5 }} onPress={this.pickImage}>
+                                <Icon name="md-image" />
+                                    <Text style={{ textAlign: 'center', color: 'white', fontWeight: 'bold' }}>Pick From Library</Text>
+                            </Button>
+                            
+                            <Button iconLef style={{ backgroundColor: '#2869F4', padding: 10, margin: 5 }}
+                                                onPress={this._takePhoto}>
+                                <Icon name="md-camera" />
+                                    <Text style={{ textAlign: 'center', color: 'white', fontWeight: 'bold'}}>Take Photo</Text>
+                            </Button>
+                        </View>
+
                         <CardItem header bordered>
                             <Text style={styles.MainText}>Username</Text>
                         </CardItem>
@@ -195,6 +307,7 @@ export default class EditProfileJobCreator extends Component {
                     </Card>
 
 
+
                     <Card>
                         <CardItem header bordered>
                             <Text style={styles.MainText}>About Us</Text>
@@ -204,7 +317,8 @@ export default class EditProfileJobCreator extends Component {
                         >
                             <Body>
                                 <View style={styles.inputGroup}>
-                                    <TextInput
+                                    <Textarea
+                                        rowSpan={5}
                                         placeholder={'Description'}
                                         value={this.state.description}
                                         style={styles.startRouteBtn}
@@ -215,7 +329,30 @@ export default class EditProfileJobCreator extends Component {
                         </CardItem>
                     </Card>
 
+                    <Card style={{ height: auto }}>
+                        <CardItem header bordered>
 
+                            <Text style={styles.MainText}>Skills</Text>
+                        </CardItem>
+                        <CardItem cardBody>
+                            <Content>
+                                <View style={styles.inputGroup}>
+                                    <TextInput
+                                        placeholder={'Skills'}
+                                        value={this.state.skills}
+                                        style={styles.startRouteBtn}
+                                        onChangeText={(val) => this.inputValueUpdate(val, 'skill')}
+                                    />
+                                    <Icon android name="md-add" size={30} onPress={() => this.addTextInput(this.state.textInput.length)} />
+                                    {this.state.textInput.map((value) => {
+                                        return value
+                                    })}
+
+                                </View>
+
+                            </Content>
+                        </CardItem>
+                      </Card>
                     <Card>
 
                         <Button block success last style={{ marginTop: 20, marginBottom: 5 }} onPress={() => this.updateUser()}>
@@ -231,6 +368,34 @@ export default class EditProfileJobCreator extends Component {
         )
     }
 }
+
+async function uploadImageAsync(uri) {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  
+    const ref = storage
+     .ref("employer_profile")
+      .child(uuid.v4());
+    const snapshot = await ref.put(blob);
+  
+    // We're done with the blob, close and release it
+    blob.close();
+  
+    return await snapshot.ref.getDownloadURL();
+  }
 
 const styles = StyleSheet.create({
     container: {

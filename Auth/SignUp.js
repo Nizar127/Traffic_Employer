@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Dimensions, View, Text, StyleSheet, Image,Alert,  g, ActivityIndicator,} from 'react-native';
 import {Root, Container, Content, Header, Form, Label, Input, Icon, Item, Button, Textarea} from 'native-base';
 //import Icon from '@expo/vector-icons/Ionicons';
-import {auth, firestore, db, storage} from '../../config/Firebase'
+import {auth, firestore, db, storage} from '../config/Firebase';
 //import * as Font from 'expo-font';
 /* import ImagePicker from 'react-native-image-crop-picker';*/
 import * as ImagePicker from 'expo-image-picker';

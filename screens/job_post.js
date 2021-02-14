@@ -29,14 +29,13 @@ import {
 import firestore from 'firebase';
 import auth from 'firebase'; */
 import {db, auth, storage, firestore} from '../config/Firebase';
-import ImagePicker from 'react-native-image-crop-picker';
+import * as ImagePicker from 'expo-image-picker';
+import uuid from 'react-native-uuid';
 
 const SIZE = 80;
 //const storageRef = storage().ref('thumbnails_job').child(`${appendIDToImage}`);
 
 // [anas]
-import ImgToBase64 from 'react-native-image-base64';
-
 
 
 export default class PostJob extends Component {
@@ -48,40 +47,33 @@ export default class PostJob extends Component {
         this.state = {
             currentUser: null,
             userID: null,
-            jobCreatorName: '',
             jobname: '',
+            email:'',
             uniqueId: '',
             jobdesc: '',
-            photo: '',
             url: '',
-            imageType: '',
             worktype: '',
             salary: '',
-            peoplenum: '',
-            time: 0,
-            lat: 0,
-            lng: 0,
-            location: { description: '' },
-            chosenDate: new Date(),
-            date: new Date().toString().substr(4, 12),
+            peoplenum: '',    
+            qualification:'',
+            experience:'',
             isLoading: false,
+            uploading: false,
             //modalVisible: false
         };
-        //this.state = { chosenDate: new Date() };
-        this.setDate = this.setDate.bind(this);
+
+        //this.setDate = this.setDate.bind(this);
         this.selectWorkType = this.selectWorkType.bind(this);
+        this.selectExperience = this.selectExperience.bind(this);
         this.pickImage = this.pickImage.bind(this);
-        this.uploadImage = this.uploadImage.bind(this);
-        this.testData = this.testData.bind(this);
 
         this.saveData = this.saveData.bind(this);
         // state = { ScaleAnimation: false };
 
-        this.state.date = this.state.chosenDate.toString().substr(4, 12);
+        //this.state.date = this.state.chosenDate.toString().substr(4, 12);
         // this.setState({ userid: user })
 
     }
-
     componentDidMount() {
         //get data first
         var user = auth.currentUser;
@@ -94,38 +86,14 @@ export default class PostJob extends Component {
         const { currentUser } = auth;
         this.setState({ currentUser });
         this.state.userID = currentUser.uid;
-        this.state.jobCreatorName = currentUser.displayName;
-    }
+        this.setState({ jobCreaterName: currentUser.displayName })  
+      }
+
 
     // componentWillMount() {
     //   Geolocation.setRNConfiguration(config);
     // }
 
-
-
-    static navigationOptions = {
-        title: 'Upload',
-
-        tabBarIcon: ({ tintColor }) => (
-            <Icon name="md-add-circle-outline" size={30} style={{ color: tintColor, fontSize: 20, iconColor: 'green' }} />
-            //<AddButton />
-        ),
-
-        headerTitle: {
-            title: 'GET-THE-JOB'
-        },
-
-        headerStyle: {
-            backgroundColor: '#f45fff',
-        },
-        headerTintColor: '#fff',
-        headerTitleStyle: {
-            fontWeight: 'bold',
-        },
-
-
-
-    }
 
     toggleView = () => {
         Animated.timing(this.mode, {
@@ -134,50 +102,33 @@ export default class PostJob extends Component {
         }).start();
     };
 
-/*     requestLocationPermission = async () => {
-        if (Platform.OS === 'ios') {
-            var response = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-            console.log('iPhone: ' + response);
-
-            if (response === 'granted') {
-                this.locateCurrentPosition();
-            }
-        } else {
-            var response = await request(PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION);
-            console.log('Android: ' + response);
-
-            if (response === 'granted') {
-                this.locateCurrentPosition();
-            }
-        }
-    }
-
-    locateCurrentPosition = () => {
-        Geolocation.getCurrentPosition(
-            position => {
-                console.log(JSON.stringify(position));
-
-                let initialPosition = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    latitudeDelta: 0.09,
-                    longitudeDelta: 0.035
-                }
-
-                this.setState({ initialPosition });
-            },
-            error => Alert.alert(error.message),
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
-        )
-    } */
 
     setUserID = (value) => {
         this.setState({ userID: value });
 
     }
 
-    setJobCreatorName = (value) => {
-        this.setSalary({ jobCreatorName: value });
+    setEmail = (value) => {
+        this.setState({ email: value });
+
+    }
+
+
+    selectWorkType = (value) => {
+        this.setState({
+            worktype: value
+        })
+    }
+
+    setQualification = (value) => {
+        this.setState({ qualification: value })
+        //console.log('job desc:',value);
+    }
+
+    selectExperience = (value) => {
+        this.setState({
+            experience: value
+        })
     }
 
     setJobName = (value) => {
@@ -193,11 +144,6 @@ export default class PostJob extends Component {
         //console.log('job desc:',value);
     }
 
-    selectWorkType = (value) => {
-        this.setState({
-            worktype: value
-        })
-    }
 
     setSalary = (value) => {
         this.setState({ salary: value })
@@ -207,149 +153,139 @@ export default class PostJob extends Component {
         this.setState({ peoplenum: value })
     }
 
-    selectTime = (value) => {
-        this.setState({ time: value })
-    }
 
-    setDate(newDate) {
-        this.setState({ date: newDate.toString().substr(4, 12) });
-    }
-
-    setLocation = (value, details) => {
-        this.setState({
-            ...this.state, location: value,
-            lat: details.geometry.location.lat, lng: details.geometry.location.lng
-        })
-        console.log("value", value)
-        console.log("details", details)
-    }
-
-
-    testData() {
-        if (this.state.worktype) {
-            console.log(this.state.worktype)
-        }
-        else {
-            Alert.alert('Please enter type of work')
-        }
-
-    }
-
-    //Return lat and long from address and update profile
-    getLatLong() {
-        Geocoder.geocodeAddress(this.state.location).then(res => {
-            res.map((element) => {
-                this.setState({
-                    lat: element.position.lat,
-                    long: element.position.lng
+    _maybeRenderUploadingOverlay = () => {
+        if (this.state.uploading) {
+          return (
+            <View
+              style={[
+                StyleSheet.absoluteFill,
+                {
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 },
-                    this.saveData) //saving data
-            })
-            console.log(this.state.lat);
-        })
-            .catch(err => console.log(err))
-    }
+              ]}>
+              <ActivityIndicator color="#fff" animating size="large" />
+            </View>
+          );
+        }
+      };
 
+    _maybeRenderImage = () => {
+        let { url } = this.state;
+        if (!url) {
+          return;
+        }
+    
+        return (
+          <View
+            style={{
+              marginTop: 10,
+              marginBottom: 10,
+              width: 350,
+              height: 250,
+              borderRadius: 3,
+              elevation: 2,
+            }}>
+            <View
+              style={{
+                borderTopRightRadius: 3,
+                borderTopLeftRadius: 3,
+                shadowColor: '#8d8f92',
+                borderColor: '#8d8f92',
+                elevation: 4,
+                borderWidth:5,
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 4, height: 4 },
+                shadowRadius: 5,
+                overflow: 'hidden',
+              }}>
+              <Image source={{ uri: url }} style={{ width: null, height: 250 }} />
+            </View>
+          </View>
+        );
+    };
+
+    _takePhoto = async () => {
+        let pickerResult = await ImagePicker.launchCameraAsync({
+          allowsEditing: true,
+          aspect: [4, 3],
+        });
+    
+        this._handleImagePicked(pickerResult);
+      };
+
+    _handleImagePicked = async pickerResult => {
+        try {
+          this.setState({ uploading: true });
+    
+          if (!pickerResult.cancelled) {
+            const uploadUrl = await uploadImageAsync(pickerResult.uri);
+            this.setState({ url: uploadUrl });
+          }
+        } catch (e) {
+          console.log(e);
+          alert('Upload failed, sorry :(');
+        } finally {
+          this.setState({ uploading: false });
+        }
+      };
 
     //Pick Image from camera or library
-    pickImage() {
-        ImagePicker.openPicker({
-            width: 300,
-            height: 180,
-            cropping: true
-        }).then(image => {
-            this.setState({
-                url: image.path,
-                imageType: image.mime
-            })
-        }).catch((error) => {
-            console.log(error)
-        })
-    }
-
-    //Upload image to Firebase storage
-    //Upload image to Firebase storage
-    uploadImage() {
-        return new Promise((resolve, reject) => {
-            const appendIDToImage = new Date().getTime();
-            const storageRef = storage.ref('thumbnails_job').child(`${appendIDToImage}`);
-
-            // [anas]
-            const task = ImgToBase64.getBase64String(this.state.url)
-                .then(base64String => {
-                    console.log("[uploadImage] Start upload image to firebase storage");
-                    console.log("[uploadImage] base64String", !!base64String);
-
-                    // .put accept blob, putString accept string
-                    // https://firebase.google.com/docs/reference/js/firebase.storage.Reference#put
-                    storageRef.putString(base64String, 'base64')
-                        .then((imageSnapshot) => {
-                            console.log('[uploadImage] Image Upload Successfully');
-
-                            storage()
-                                .ref(imageSnapshot.metadata.fullPath)
-                                .getDownloadURL()
-                                .then((downloadURL) => {
-                                    console.log("[uploadImage] downloadURL", downloadURL);
-                                    // setAllImages((allImages) => [...allImages, downloadURL]);
-                                    //this.dbRef.doc(this).update({ imageURL: downloadURL });
-                                    resolve(downloadURL);
-                                });
-
-                        }).catch(e => {
-                            console.error("[uploadImage] Put storageRef failed");
-                            console.error(e);
-                            reject("");
-                        });
-
-                }).catch(e => {
-                    console.error("[uploadImage] Get base 64 string failed");
-                    console.error(e);
-                    reject("");
-                });
+    pickImage = async() => {
+        let permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+        if (permissionResult.granted === false) {
+          alert('Permission to access camera roll is required!');
+          return;
+        }
+    
+        let pickerResult = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
         });
+    
+        this._handleImagePicked(pickerResult);
+    
     }
 
-
-
-    saveData = () => {
+    saveData = async() => {
         console.log("state", this.state)
-        if (this.state.userID && this.state.jobCreatorName && this.state.jobname && this.state.uniqueId && this.state.jobdesc && this.state.worktype && this.state.salary && this.state.peoplenum && this.state.date && this.state.location && this.state.url && this.state.lat && this.state.lng) {
+        if (this.state.userID && this.state.worktype && this.state.qualification && this.state.experience && this.state.email&& this.state.jobname && this.state.uniqueId && this.state.jobdesc && this.state.salary && this.state.peoplenum  && this.state.url) {
             if (isNaN(this.state.salary && this.state.peoplenum)) {
                 Alert.alert('Status', 'Invalid Figure!');
             }
             else {
-                this.uploadImage().then(firebaseUrl => {
-                    console.log("[saveData] firebaseUrl", firebaseUrl);
-                    console.log("[saveData] Start add to firebase");
-
+                //await auth.currentUser.uid.then(doc =>{
+                    
                     this.dbRef.add({
-                        uid: this.state.userID,
-                        jobCreatorName: this.state.jobCreatorName,
+                        uid: auth.currentUser.uid,
+                        jobCreatorname: this.state.email,
                         jobname: this.state.jobname,
                         uniqueId: this.state.uniqueId,
                         jobdesc: this.state.jobdesc,
-                        worktype: this.state.worktype,
                         salary: this.state.salary,
-                        url: firebaseUrl,
-                        lat: this.state.lat,
-                        lng: this.state.lng,
+                        url: this.state.url,
+                        worktype: this.state.worktype,
+                        experience: this.state.experience,
+                        qualification: this.state.qualification,
                         peoplenum: this.state.peoplenum,
-                        chosenDate: this.state.date,
-                        location: this.state.location,
+                        
                     }).then((res) => {
-                        console.log("[saveData] Done add to firebase");
+                        console.log("[saveData] Done add to firebase", res);
 
                         this.setState({
                             jobname: '',
                             uniqueId: '',
                             jobdesc: '',
-                            worktype: '',
                             salary: '',
                             url: '',
                             peoplenum: '',
                             time: 0,
-                            location: '',
+                        
                         })
                     });
                     Alert.alert('Your Job Has Been Posted', 'Please Choose',
@@ -364,11 +300,8 @@ export default class PostJob extends Component {
                             }
                         ], { cancelable: false }
                     );
-                }).catch(e => {
-                    console.error("[saveData] Upload image failed");
-                    console.error(e);
-                });
-            }
+           // })
+        }
         } else {
             Alert.alert('Status', 'Empty Field(s)!');
         }
@@ -388,6 +321,11 @@ export default class PostJob extends Component {
                 <Content padder>
                     <Text style={{ textAlign: "center", height: 40, fontWeight: "bold", marginTop: 20 }}>Details</Text>
                     <Form>
+                    <Item style={styles.inputGroup} fixedLabel last>
+                            <Label>Email</Label>
+                            <Input style={styles.startRouteBtn} onChangeText={this.setEmail} />
+                        </Item>
+
                         <Item style={styles.inputGroup} fixedLabel last>
                             <Label>Job Name</Label>
                             <Input style={styles.startRouteBtn} onChangeText={this.setJobName} />
@@ -396,58 +334,101 @@ export default class PostJob extends Component {
                             <Label>Unique Id</Label>
                             <Input style={styles.startRouteBtn} onChangeText={this.setUniqueId} />
                         </Item>
-                        <Item style={styles.inputGroup} fixedLabel last>
+
+
+                        <View style={styles.inputGroup} fixedLabel last>
                             <Label>Job Description</Label>
-                            <Textarea rowSpan={5} onChangeText={this.setJobDesc} bordered style={styles.startTextBtn} placeholder="Tell something about the job Here" />
+                        </View>
+                        <Item>
+                            <Textarea rowSpan={5} colSpan={5} onChangeText={this.setJobDesc} bordered style={styles.startTextBtn} placeholder="Tell something about the job Here" />
+                        </Item>
+                        
+
+                        <Item>
+                             <Label>Work Type</Label>
+                        </Item>
+                        <Item fixedLabel picker last>        
+                            <Picker
+                                mode="dropdown"
+                                iosIcon={<Icon name="ios-arrow-down-outline" />}
+                                style={{ width: 250 }}
+                                placeholder="Select Type of Job"
+                                placeholderStyle={{ color: "#bfc6ea" }}
+                                placeholderIconColor="#007aff"
+                                selectedValue={this.state.worktype}
+                                onValueChange={this.selectWorkType.bind(this)}
+                                Title="Work Type"
+                            >
+                                <Picker.Item label="Select Work Type" value={null} />
+                                <Picker.Item label="Accounting" value="Accounting" />
+                                <Picker.Item label="Office Assistant" value="Office Assistant" />
+                                <Picker.Item label="Software Engineer" value="Software Engineer" />
+                                <Picker.Item label="Finance" value="Finance" />
+                                <Picker.Item label="Sales" value="Sales" />
+                                <Picker.Item label="Data Analytics" value="Data Analytics" />
+                                <Picker.Item label="Database" value="Database" />
+                                <Picker.Item label="Designer" value="Designer" />
+
+                            </Picker>
+                        </Item>                        
+                   
+                        <View style={styles.inputGroup} fixedLabel last>
+                            <Label>Qualifcation</Label>
+                        </View>
+                        <Item>
+                            <Textarea rowSpan={5} colSpan={5} onChangeText={this.setQualification} bordered style={styles.startTextBtn} placeholder="Tell something about the job Here" />
+                        </Item>
+                        
+                        <Item>
+                             <Label>Experience</Label>
+                        </Item>
+                        <Item fixedLabel picker last>        
+                            <Picker
+                                mode="dropdown"
+                                iosIcon={<Icon name="ios-arrow-down-outline" />}
+                                style={{ width: 250 }}
+                                placeholder="Select Type of Job"
+                                placeholderStyle={{ color: "#bfc6ea" }}
+                                placeholderIconColor="#007aff"
+                                selectedValue={this.state.experience}
+                                onValueChange={this.selectExperience.bind(this)}
+                                Title="Experience"
+                            >
+                                <Picker.Item label="Select Experience" value={null} />
+                                <Picker.Item label="Senior" value="Senior" />
+                                <Picker.Item label="Junior" value="Junior" />
+                                <Picker.Item label="Intermediate" value="Intermediate" />
+
+                            </Picker>
                         </Item>
 
-                        <Item fixedLabel>
-                            <Label>Add Image</Label>
-                            <Button block iconLef style={{ backgroundColor: '#1B6951' }}
-                                onPress={this.pickImage}>
-                                <Icon name="md-image" />
-                                <Text style={{ textAlign: 'center' }}>Change Thumbnail</Text>
-                            </Button>
-                        </Item>
+                        <View style={{marginBottom: 20, flexDirection: 'row', justifyContent: 'center' }}>
+                                <Button iconLef style={{ backgroundColor: '#1B6951', padding: 2, margin: 3, width: 150}} onPress={this.pickImage}>
+                                    <Icon name="md-image" />
+                                        <Text style={{ textAlign: 'center', color: 'white', fontWeight: 'bold' }}>Library</Text>
+                                </Button>
+                                
+                                <Button iconLef style={{ backgroundColor: '#2869F4', padding: 2, margin: 3 }}
+                                                    onPress={this._takePhoto}>
+                                    <Icon name="md-camera" />
+                                        <Text style={{ textAlign: 'center', color: 'white', fontWeight: 'bold'}}>Take Photo</Text>
+                                </Button>
+                            </View>
 
 
-                        <Image
-                            source={{ uri: this.state.url }}
-                            style={{
-                                height: 200, width: null, flex: 1,
-                                borderTopLeftRadius: 10, borderTopRightRadius: 10
-                            }}
-                        />
+                            {this._maybeRenderImage()}
+                            {this._maybeRenderUploadingOverlay()}
+
 
                         <Item style={styles.inputGroup} fixedLabel last>
                             <Label>Salary</Label>
-                            <Input style={styles.startRouteBtn} onChangeText={this.setSalary} type="number" />
+                            <Input  keyboardType="numeric" style={styles.startRouteBtn} onChangeText={this.setSalary} />
                         </Item>
 
                         <Item style={styles.inputGroup} fixedLabel last>
                             <Label>Number of People</Label>
-                            <Input style={styles.startRouteBtn} onChangeText={this.setPeopleNum} />
+                            <Input keyboardType="numeric" style={styles.startRouteBtn} onChangeText={this.setPeopleNum} />
                         </Item>
-
-                        <DatePicker
-                            defaultDate={new Date()}
-                            minimumDate={new Date()}
-                            maximumDate={new Date(2030, 12, 31)}
-                            locale={"en"}
-                            date={this.state.setDate}
-                            timeZoneOffsetInMinutes={undefined}
-                            modalTransparent={false}
-                            animationType={"fade"}
-                            androidMode={"default"}
-                            placeHolderText="Select date"
-                            textStyle={{ color: "green" }}
-                            placeHolderTextStyle={{ color: "#d3d3d3" }}
-                            onDateChange={this.setDate}
-                            disabled={false}
-                        />
-                        <Text style={styles.inputGroup}>
-                            Date: {this.state.date}
-                        </Text>
 
 
                     </Form>
@@ -463,6 +444,34 @@ export default class PostJob extends Component {
         );
     }
 }
+
+async function uploadImageAsync(uri) {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function(e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+  
+    const ref = storage
+     .ref("job_post")
+      .child(uuid.v4());
+    const snapshot = await ref.put(blob);
+  
+    // We're done with the blob, close and release it
+    blob.close();
+  
+    return await snapshot.ref.getDownloadURL();
+  }
 
 const styles = StyleSheet.create({
     closeText: {
@@ -483,12 +492,24 @@ const styles = StyleSheet.create({
         margin: 20,
         elevation: 10
     },
-    startTextBtn: {
+    description: {
         backgroundColor: 'white',
-        width: 200,
+        width: 400,
         alignItems: 'center',
         justifyContent: 'center',
         marginHorizontal: 20,
+        borderWidth: 1,
+        borderColor: 'grey',
+        shadowColor: 'black',
+        margin: 20,
+        elevation: 10
+    },
+    startTextBtn: {
+        backgroundColor: 'white',
+        width: 300,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginHorizontal: 10,
         borderWidth: 1,
         borderColor: 'grey',
         shadowColor: 'black',

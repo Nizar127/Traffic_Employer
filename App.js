@@ -16,6 +16,7 @@ import SignUp from './Auth/SignUp'
 import JobCreatorDetail from './screens/JobCreatorDetail'
 import EditProfileJobCreator from './screens/EditProfileEmployer'
 import Search from './screens/Search'
+import Profile from './screens/profile';
 import SplashScreen from './SplashScreen';
 import MyJob from './screens/MyJob';
 import MyOrderDetail from './screens/MyOrderDetail';
@@ -38,6 +39,7 @@ function App() {
         <Stack.Screen name="EmployerProfile" component={EmployerProfile} />
         <Stack.Screen name="JobCreatorDetail" component={JobCreatorDetail}/>
         <Stack.Screen name="PostJob" component={PostJob} />
+        <Stack.Screen name="Profile" component={Profile} />
         <Stack.Screen name="Search" component={Search} />
         <Stack.Screen name="SignUp" component={SignUp} />
         <Stack.Screen name="EditProfileJobCreator" component={EditProfileJobCreator} />

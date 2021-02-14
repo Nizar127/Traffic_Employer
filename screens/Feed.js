@@ -67,13 +67,13 @@ export default class Feed extends Component {
             worktime: '',
             //selectedHours: 0,
             //selectedMinutes: 0,
-            chosenDate: new Date(),
-            date_start: new Date().toString().substr(4, 12),
-            date_end: new Date().toString().substr(4, 12)
+            //chosenDate: new Date(),
+            //date_start: new Date().toString().substr(4, 12),
+            //date_end: new Date().toString().substr(4, 12)
         };
-        this.selectWorkTime = this.selectWorkTime.bind(this);
-        this.setDate_Start = this.setDate_Start.bind(this);
-        this.setDate_End = this.setDate_End.bind(this);
+       // this.selectWorkTime = this.selectWorkTime.bind(this);
+        //this.setDate_Start = this.setDate_Start.bind(this);
+        //this.setDate_End = this.setDate_End.bind(this);
 
     }
 
@@ -107,13 +107,9 @@ export default class Feed extends Component {
                 job_seekerImage,
                 job_seeker_name,
                 job_seekerSalary,
-                lat,
-                lng,
                 ref_experienece,
                 ref_skills,
                 ref_selfDescribe,
-                startDate,
-                workingLocation
             } = res.data();
             hire.push({
                 key: res.id,
@@ -127,13 +123,9 @@ export default class Feed extends Component {
                 jobWorkType,
                 job_seekerImage,
                 job_seekerSalary,
-                lat,
-                lng,
                 ref_experienece,
                 ref_skills,
                 ref_selfDescribe,
-                startDate,
-                workingLocation
             });
         });
         this.setState({
@@ -156,26 +148,9 @@ export default class Feed extends Component {
         
     }
 
-    setPeriod = (value) => {
-        this.setState({ ...this.state, period: value })
-    }
 
     setTask = (value) => {
         this.setState({ ...this.state, task: value })
-    }
-
-    selectWorkTime = (value) => {
-        this.setState({
-            worktime: value
-        })
-    }
-
-    setDate_Start(newDate) {
-        this.setState({ date_start: newDate.toString().substr(4, 12) });
-    }
-
-    setDate_End(newDate) {
-        this.setState({ date_end: newDate.toString().substr(4, 12) });
     }
 
 
@@ -217,9 +192,6 @@ export default class Feed extends Component {
                 job_seekerImage: doc.get('job_seekerImage'),
                 jobname: doc.get('jobName'),
                 jobWorktype: doc.get('jobWorkType'),
-                workingLocation: doc.get('workingLocation'),
-                lat: doc.get('lat'),
-                lng: doc.get('lng'),
                 job_seeker_salary: doc.get('job_seekerSalary'),
                 skills: doc.get('ref_skills'),
                 experience: doc.get('ref_experienece'),
@@ -244,22 +216,12 @@ export default class Feed extends Component {
                         jobName: this.state.jobname,
                         job_seekerSalary: this.state.job_seeker_salary,
                         type_of_Job: this.state.jobWorktype,
-                        location: this.state.workingLocation,
-                        lat: this.state.lat,
-                        lng: this.state.lng,
-                        period: this.state.period,
                         task: this.state.task,
-                        startDate: this.state.date_start,
-                        endDate: this.state.date_end,
-                        time: this.state.time,
 
                     }).then((res) => {
                         this.setState({
                             task: '',
                             period: '',
-                            startDate: '',
-                            endDate: '',
-                            time: '',
                             worktime: ''
                         });
                         Alert.alert('Congrats!', 'Your Application Has Been Send To The Job Seeker');
@@ -299,90 +261,6 @@ export default class Feed extends Component {
                                 behavior={Platform.OS === "ios" ? "padding" : null}
                                 style={{ flex: 1 }}>
                                 <View style={Style.inner}>
-{/*                                     <Item style={Style.inputGroup} fixedLabel last style={{ marginTop: 20 }}>
-                                        <Label>Period</Label>
-                                        <Input style={Style.startTextBtn} onChangeText={this.setPeriod} bordered placeholder="Working Period Required" />
-                                    </Item> */}
-
-{/*                                     <Item fixedLabel picker last>
-                                        <Label>Type of Time</Label>
-                                        <Picker
-                                            mode="dropdown"
-                                            iosIcon={<Icon name="ios-arrow-down-outline" />}
-                                            style={{ width: undefined }}
-                                            placeholder="State Working Time"
-                                            placeholderStyle={{ color: "#bfc6ea" }}
-                                            placeholderIconColor="#007aff"
-                                            selectedValue={this.state.worktime}
-                                            onValueChange={this.selectWorkTime.bind(this)}
-                                            Title="Work Type"
-                                        >
-                                            <Picker.Item label="Select Period of Working" value={null} />
-                                            <Picker.Item label="Day" value="Day" />
-                                            <Picker.Item label="Hour" value="Time" />
-
-                                        </Picker>
-                                    </Item> */}
-{/*                                     <View>
-                                        <Text style={Style.text}>Please Determine Working Time</Text>
-                                        <TouchableOpacity
-                                            onPress={() => this.TimePicker.open()}
-                                            style={Style.button}
-                                        >
-                                            <Text style={Style.buttonText}>Open TimePicker</Text>
-                                        </TouchableOpacity>
-                                        <Text>{this.state.time}</Text>
-                                        <TimePicker
-                                            ref={ref => {
-                                                this.TimePicker = ref;
-                                            }}
-                                            onCancel={() => this.onCancel()}
-                                            onConfirm={(hour, minute) => this.onConfirm(hour, minute)}
-                                        />
-                                    </View> */}
-
-                                    <DatePicker
-                                        defaultDate={new Date()}
-                                        minimumDate={new Date()}
-                                        maximumDate={new Date(2030, 12, 31)}
-                                        locale={"en"}
-                                        date={this.state.setDate_Start}
-                                        timeZoneOffsetInMinutes={undefined}
-                                        modalTransparent={false}
-                                        animationType={"fade"}
-                                        androidMode={"default"}
-                                        placeHolderText="Select date"
-                                        textStyle={{ color: "blue" }}
-                                        placeHolderTextStyle={{ color: "#d3d3d3" }}
-                                        onDateChange={this.setDate_Start}
-                                        disabled={false}
-                                    />
-                                    <Text>
-                                        Start Date: {this.state.date_start}
-                                    </Text>
-
-
-                                    <DatePicker
-                                        defaultDate={new Date()}
-                                        minimumDate={new Date()}
-                                        maximumDate={new Date(2030, 12, 31)}
-                                        locale={"en"}
-                                        date={this.state.setDate_End}
-                                        timeZoneOffsetInMinutes={undefined}
-                                        modalTransparent={false}
-                                        animationType={"fade"}
-                                        androidMode={"default"}
-                                        placeHolderText="Select date"
-                                        textStyle={{ color: "blue" }}
-                                        placeHolderTextStyle={{ color: "#d3d3d3" }}
-                                        onDateChange={this.setDate_End}
-                                        disabled={false}
-
-                                    />
-                                    <Text style={{ marginBottom: 20 }}>
-                                        End Date: {this.state.date_end}
-                                    </Text>
-
 
 
                                     <Item style={Style.inputGroup} fixedLabel last>

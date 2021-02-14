@@ -6,27 +6,46 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import EmployerProfile from './screens/profile';
 import Feed from './screens/Feed';
 import PostJob from './screens/job_post';
+import { Ionicons } from '@expo/vector-icons';
 
-/* function TestScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Home!</Text>
-    </View>
-  );
-}
 
-function SettingsScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Settings!</Text>
-    </View>
-  );
-} */
+
 
 export default function Home() {
     return (
      
-        <Tab.Navigator>
+        <Tab.Navigator
+        screenOptions={({ route }) => ({
+          tabBarIcon: ({  color, size }) => {
+            if (route.name === 'Feed') {
+              return (
+                <Ionicons
+                  name={'md-home-outline'}
+                  size={size}
+                  color={color}
+                />
+              );
+            } else if (route.name === 'PostJob') {
+              return (
+                <Ionicons
+                  name={'md-add'}
+                  size={size}
+                  color={color}
+                />
+              );
+            } else if (route.name === 'EmployerProfile'){
+              <Ionicons
+                  name={'md-albums'}
+                  size={size}
+                  color={color}
+                />
+            }
+          },
+        })}
+        tabBarOptions={{
+          activeTintColor: 'tomato',
+          inactiveTintColor: 'gray',
+        }}>
           <Tab.Screen name="Feed" component={Feed} /> 
           <Tab.Screen name="PostJob" component={PostJob} />
           <Tab.Screen name="EmployerProfile" component={EmployerProfile} />
