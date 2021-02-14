@@ -107,7 +107,8 @@ export default class Feed extends Component {
                 job_seekerImage,
                 job_seeker_name,
                 job_seekerSalary,
-                ref_experienece,
+                jobExperience,
+                job_qualification,
                 ref_skills,
                 ref_selfDescribe,
             } = res.data();
@@ -119,11 +120,12 @@ export default class Feed extends Component {
                 jobCreatorName,
                 jobDescription,
                 jobName,
-                job_seeker_name,
                 jobWorkType,
                 job_seekerImage,
+                job_seeker_name,
                 job_seekerSalary,
-                ref_experienece,
+                jobExperience,
+                job_qualification,
                 ref_skills,
                 ref_selfDescribe,
             });
@@ -194,7 +196,8 @@ export default class Feed extends Component {
                 jobWorktype: doc.get('jobWorkType'),
                 job_seeker_salary: doc.get('job_seekerSalary'),
                 skills: doc.get('ref_skills'),
-                experience: doc.get('ref_experienece'),
+                experience: doc.get('jobExperience'),
+                qualification: doc.get('job_qualification'),
                 selfDescribe: doc.get('ref_selfDescribe')
             }, () => {
 
@@ -203,7 +206,7 @@ export default class Feed extends Component {
 
 
 
-                if (this.state.period && this.state.time && this.state.worktime && this.state.date_start && this.state.date_end && this.state.task) {
+                if (this.state.task) {
 
                     this.hiringRef.add({
                         jobCreatorID: auth.currentUser.uid,
@@ -221,8 +224,7 @@ export default class Feed extends Component {
                     }).then((res) => {
                         this.setState({
                             task: '',
-                            period: '',
-                            worktime: ''
+
                         });
                         Alert.alert('Congrats!', 'Your Application Has Been Send To The Job Seeker');
                         this.displayModal(!this.state.isVisible);

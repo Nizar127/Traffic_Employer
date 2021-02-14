@@ -33,7 +33,7 @@ const SplashScreen = ({ navigation }) => {
                 <Animatable.Text
                     animation="fadeIn"
                     style={styles.Maintext}>
-                    TempJob for Job Seekers
+                    Employer Job Portal
                 </Animatable.Text>
 
             </View>
@@ -41,7 +41,7 @@ const SplashScreen = ({ navigation }) => {
                 style={styles.footer}
                 animation="fadeInUpBig"
             >
-                <Text style={styles.title}>Find Temporary Job Here</Text>
+                <Text style={styles.title}>Find Employer Job Portal</Text>
                 <Text style={styles.text}>Sign in with account</Text>
                 <View style={styles.button}>
                     <TouchableOpacity onPress={() => navigation.push('Login')}>

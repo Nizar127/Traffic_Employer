@@ -6,19 +6,8 @@ import Icon from '@expo/vector-icons/Ionicons';
 import {db, auth, storage} from '../config/Firebase';
 import * as Facebook from 'expo-facebook';
 
-/* import {
-  createSwitchNavigator,
-  createAppContainer,
-} from 'react-navigation';
-import {createDrawerNavigator, DrawerItems} from 'react-navigation-drawer';
-import {createStackNavigator} from 'react-navigation-stack';
-import {createBottomTabNavigator} from 'react-navigation-tabs';
-import {AppLoading} from 'expo'; */
 import * as Font from 'expo-font';
-/* import SafeAreaView from 'react-native-safe-area-view';
-import { ScrollView } from 'react-native-gesture-handler';
-import ignoreWarnings from 'react-native-ignore-warnings';
-ignoreWarnings('Setting a timer'); */
+
 
 export default class Login extends Component {
   constructor(props){
@@ -101,7 +90,7 @@ callGraph = async token => {
 async loginWithFacebook() {
 
   //ENTER YOUR APP ID 
-  const { type, token } = await Facebook.logInWithReadPermissionsAsync('714799715835689', { permissions: ['public_profile'] })
+  const { type, token } = await Facebook.logInWithReadPermissionsAsync('<>', { permissions: ['public_profile'] })
 
   if (type == 'success') {
 
@@ -157,18 +146,10 @@ async loginWithFacebook() {
               <Text style={{ color: 'white' }}> Sign Up</Text>
           </Button>
 
-          <Button style={{ marginTop: 10 }}
-              full
-              rounded
-              primary
-              onPress={() => this.props.navigation.navigate('Home')}
-          >
-              <Text style={{ color: 'white' }}> Skip to Dashboard</Text>
-          </Button>
+
 
           <Button style={{ marginTop: 10 }}
             full
-            rounded
             primary
             onPress={() => this.loginWithFacebook()}
           >
