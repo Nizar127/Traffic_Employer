@@ -34,7 +34,7 @@ export default class Feed extends Component {
 
     constructor() {
         super();
-        this.applicationRef = firestore.collection('Hiring')/* .where('jobCreatorID', '==', auth().currentUser.uid) */;
+        this.applicationRef = firestore.collection('Hiring').where('jobCreatorID', '==', auth.currentUser.uid);
         //this.applicationRef = firestore().collection('Hiring');/* .doc(auth().currentUser.uid).get().where('jobCreatorID', '==', auth().currentUser.uid); */
         this.hiringRef = firestore.collection('Job_Hired');
 
@@ -49,6 +49,7 @@ export default class Feed extends Component {
             userID: '',
             jobCreatorID: '',
             jobCreatorName: '',
+            jobCreatorImage:'',
             jobDescription: '',
             jobName: '',
             jobWorktype: '',
@@ -182,6 +183,7 @@ export default class Feed extends Component {
 
     HireWorking = (id) => {
         console.log("text_id", id);
+
         let dbref = firestore.collection('Hiring').doc(id).get();
         dbref.then(doc => {
             this.setState({
@@ -210,8 +212,8 @@ export default class Feed extends Component {
 
                     this.hiringRef.add({
                         jobCreatorID: auth.currentUser.uid,
-                        job_creator_name: auth.currentUser.displayName,
-                        job_creator_Image: auth.currentUser.photoURL,
+                        job_creator_name: auth.currentUser.email,
+                        job_creator_Image: this.state.jobCreatorImage,
                         jobSeekerName: this.state.jobSeekerName,
                         jobSeekerID: this.state.jobseekerID,
                         jobDescription: this.state.jobDescription,
@@ -278,7 +280,7 @@ export default class Feed extends Component {
                                         }}><Icon name="md-close" size={20} />
                                     </Text>
 
-                                    <Button success style={Style.addButton} onPress={() => this.HireWorking(this.state.key)}>
+                                    <Button success  onPress={() => this.HireWorking(this.state.key)}>
                                         <Text>Submit</Text>
                                     </Button>
                                     <View style={{ flex: 1 }}></View>
@@ -308,11 +310,11 @@ export default class Feed extends Component {
 
                                                 </CardItem>
                                                 <CardItem header>
-                                                    <Text style={Style.text_title}>{item.job_seeker_name}</Text>
+                                                    <Text>{item.job_seeker_name}</Text>
 
                                                 </CardItem>
                                                 <CardItem bordered button onPress={() => {
-                                                    this.props.navigation.navigate('UserProfile', {
+                                                    this.props.navigation.navigate('JobCreatorDetail', {
                                                         userkey: item.key
                                                     });
                                                 }}>
@@ -321,9 +323,10 @@ export default class Feed extends Component {
                                                             <Thumbnail large source={{ uri: item.job_seekerImage }} style={{ margin: 5 }} />
                                                         </Left>
                                                         <Body>
+                                                        <Text style={{ paddingBottom: 7, margin: 10 }}>{item.jobDescription}</Text>
                                                             <Text style={{ paddingBottom: 7 }}>Capability</Text>
                                                             <Text note style={{ padding: 3 }}>{item.ref_skills}</Text>
-                                                            <Text style={{ padding: 3 }}>{item.ref_experienece}</Text>
+                                                            <Text style={{ padding: 3 }}>{item.ref_selfDescribe}</Text>
                                                         </Body>
 
                                                     </CardItem>

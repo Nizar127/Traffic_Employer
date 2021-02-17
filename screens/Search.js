@@ -17,8 +17,8 @@ export default class Search extends Component {
     constructor() {
         super();
 
-        //this.hireRef = firestore().collection('Hiring');
-        this.userRef = firestore.collection('users');
+        this.hireRef = firestore().collection('Hiring');
+        //this.userRef = firestore.collection('Users');
         //this.applyRef = firestore().collection('Job_list').orderBy('chosenDate', 'asc');
 
 
@@ -37,7 +37,7 @@ export default class Search extends Component {
             jobname: '',
             ///userId: '',
             isVisible: false,
-            skills: '',
+            ref_skills: '',
             experience: '',
             profileImage: '',
             selfdescription: '',
@@ -49,11 +49,11 @@ export default class Search extends Component {
             jobDescription: '',
             job_seekerImage: '',
             jobWorkType: '',
-            workingLocation: '',
-            lat: '',
-            lng: '',
+            job_qualification:'',
             job_seeker_salary: '',
-            startDate: '',
+            jobExperience: '',
+            ref_selfDescribe: '',
+            jobName: '',
             searchText: '',
             searchList: []
 
@@ -124,14 +124,76 @@ export default class Search extends Component {
         }
     };
 
+    HireWorking = (id) => {
+        console.log("text_id", id);
+        let dbref = firestore.collection('Hiring').doc(id).get();
+        dbref.then(doc => {
+            this.setState({
+                ...this.state,
+                uid: doc.get('uid'),
+                //job_seeker_name: doc.get('username'),
+                jobSeekerName: doc.get('job_seeker_name'),
+                jobseekerID: doc.get('userID'),
+                jobDescription: doc.get('jobDescription'),
+                job_seekerImage: doc.get('job_seekerImage'),
+                jobname: doc.get('jobName'),
+                jobWorktype: doc.get('jobWorkType'),
+                job_seeker_salary: doc.get('job_seekerSalary'),
+                skills: doc.get('ref_skills'),
+                experience: doc.get('jobExperience'),
+                qualification: doc.get('job_qualification'),
+                selfDescribe: doc.get('ref_selfDescribe')
+            }, () => {
 
+                console.log("state", this.state)
+                console.log("auth.currentUser", auth.currentUser)
+
+
+
+                if (this.state.task) {
+
+                    this.hiringRef.add({
+                        jobCreatorID: auth.currentUser.uid,
+                        job_creator_name: auth.currentUser.displayName,
+                        job_creator_Image: auth.currentUser.photoURL,
+                        jobSeekerName: this.state.jobSeekerName,
+                        jobSeekerID: this.state.jobseekerID,
+                        jobDescription: this.state.jobDescription,
+                        job_seekerImage: this.state.job_seekerImage,
+                        jobName: this.state.jobname,
+                        job_seekerSalary: this.state.job_seeker_salary,
+                        type_of_Job: this.state.jobWorktype,
+                        task: this.state.task,
+
+                    }).then((res) => {
+                        this.setState({
+                            task: '',
+
+                        });
+                        Alert.alert('Congrats!', 'Your Application Has Been Send To The Job Seeker');
+                        this.displayModal(!this.state.isVisible);
+
+                    })
+
+                        .catch((err) => {
+                            console.error("Error found: ", err);
+                            // this.setState({
+                            //   isLoading: false,
+                            // });
+                        });
+                }
+            });
+
+        });
+
+    }
 
 
     onClickSearch = () => {
         console.log('state.searchText', this.state.searchText);
 
 
-        firestore.collection('users').where('mainskills', '==', this.state.searchText).get().then(querySnapshot => {
+        firestore.collection('Hiring').where('jobWorkType', '==', this.state.searchText).get().then(querySnapshot => {
             var searchList = [];
             var text = this.state.searchText;
             var lowercase = text.toLowerCase();
@@ -139,18 +201,15 @@ export default class Search extends Component {
             querySnapshot.forEach(doc => {
                 searchList.push({
                     key: doc.id,
-                    displayName: doc.get('displayName'),
-                    mainskills: doc.get('mainskills'),
-                    photoURL: doc.get('photoURL'),
-                    description: doc.get('description'),
-                    // jobname: doc.get('jobname'),
-                    // salary: doc.get('salary'),
-                    // url: doc.get('url'),
-                    // jobdesc: doc.get('jobdesc'),
-                    // jobCreatorName: doc.get('jobCreatorName'),
-                    // chosenDate: doc.get('chosenDate'),
-                    // worktype: doc.get('worktype'),
-                    // location: doc.get('location')
+                    job_seeker_name: doc.get('job_seeker_name'),
+                    ref_skills: doc.get('ref_skills'),
+                    jobName: doc.get('jobName'),
+                    job_seekerImage: doc.get('job_seekerImage'),
+                    job_qualification: doc.get('job_qualification'),
+                    jobExperience: doc.get('jobExperience'),
+                    jobDescription: doc.get('jobDescription'),
+                    ref_selfDescribe: doc.get('ref_selfDescribe')
+
                 });
             });
 
@@ -179,36 +238,119 @@ export default class Search extends Component {
                             renderItem={({ item, index }) => {
                                 console.log('item', item);
                                 return (
+                                    
+                                    <View>
+                                        
+                                        <Modal
+                                        animationType={"slide"}
+                                        transparent={false}
+                                        visible={this.state.isVisible}
+                                        onRequestClose={() => {
+                                            Alert.alert('Modal has now been closed.');
+                                        }}>
+                                        <ScrollView>
+                                            <KeyboardAvoidingView
+                                                behavior={Platform.OS === "ios" ? "padding" : null}
+                                                style={{ flex: 1 }}>
+                                                <View style={Style.inner}>
 
-                                    <Card key={index} >
-                                        <CardItem><Text style={Style.text_title}>{item.mainskills}</Text></CardItem>
-                                        <CardItem cardBody bordered button onPress={() => this.props.navigation.navigate('JobCreatorDetail', {
-                                            userkey: item.key
-                                        })}>
-                                            <Image source={{ uri: item.photoURL }} style={{ height: 200, width: null, flex: 1 }} />
-                                        </CardItem>
-                                        <CardItem>
-                                            <Body>
-                                                <CardItem style={{ width: 340, height: 50, borderTopWidth: 3, marginTop: 5, }} button bordered onPress={() => this.props.navigation.navigate('UserProfile')}>
-                                                    <Text note style={{ fontSize: 18, color: 'black', fontWeight: 'bold' }}>{item.displayName}</Text>
+
+                                                    <Item style={Style.inputGroup} fixedLabel last>
+                                                        <Label>Task To Do</Label>
+                                                        <Textarea rowSpan={3} bordered onChangeText={this.setTask} style={Style.startTextBtn} placeholder="Tell something about the job Here" />
+                                                    </Item>
+
+
+                                                    <Text
+                                                        style={Style.closeText}
+                                                        onPress={() => {
+                                                            this.displayModal(!this.state.isVisible);
+                                                        }}><Icon name="md-close" size={20} />
+                                                    </Text>
+
+                                                    <Button success style={Style.addButton} onPress={() => this.HireWorking(this.state.key)}>
+                                                        <Text>Submit</Text>
+                                                    </Button>
+                                                    <View style={{ flex: 1 }}></View>
+                                                </View>
+
+                                            </KeyboardAvoidingView>
+                                        </ScrollView>
+                                    </Modal>
+                                    <Header searchBar rounded style={Style.searchBar}>
+                                    <Item>
+                                        <Icon name="ios-search" />
+                                        <Input placeholder="Search" onChangeText={value => this.setState({ searchText: value })} />
+                                        <Button rounded onPress={this.onClickSearch}>
+                                            <Text>Search</Text>
+                                        </Button>
+                                    </Item>
+        
+        
+                                </Header>
+                                
+                                <Card key={index} style={Style.listing}>
+                                                <CardItem><Text style={Style.text_title}>{item.worktype}</Text></CardItem>
+                                                <CardItem cardBody bordered button onPress={() => this.props.navigation.navigate('JobCreatorDetail', {
+                                                    userkey: item.key
+                                                })}>
+                                                    <Image source={{ uri: item.job_seekerImage }} style={{ height: 200, width: null, flex: 1 }} />
+                                                </CardItem>
+                                                <CardItem style={{ flexDirection: 'row' }}>
+                                                    <Body>
+                                                        <Text style={Style.text_header}>{item.jobName}</Text>
+                                                    </Body>
+                                                    <Button style={Style.startRouteBtn} onPress={this.onShare}>
+                                                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Share</Text>
+                                                    </Button>
                                                 </CardItem>
 
-                                            </Body>
-                                            <Button style={Style.startRouteBtn} onPress={this.onShare}>
-                                                <Text style={{ color: 'white', fontWeight: 'bold' }}>Share</Text>
-                                            </Button>
-                                        </CardItem>
-                                        <CardItem style={{ width: 340, height: 50, marginTop: 5, marginBottom: 7, backgroundColor: 'white' }} button bordered onPress={() => this.props.navigation.navigate('UserProfile')}>
-                                            <Text note style={{ fontSize: 18, color: 'black', fontWeight: 'bold' }}>{item.description}</Text>
-                                        </CardItem>
+                                                <CardItem>
+                                                    <Text style={{color:'#0D79F2'}}>{item.job_seeker_name}</Text>
+                                                </CardItem>
+                                                <CardItem style={Style.jobDesc}>
+                                                    <Text style={{fontWeight: 'bold', fontSize:13}}>About Myself:</Text>
+                                                   
+                                                </CardItem>
+                                                <View>
+                                            
+                                                        <Text>{item.ref_selfDescribe}</Text>
+                                                    
+                                                </View>
+                                                <CardItem style={Style.jobDesc}>
+                                                    <Text style={{fontWeight: 'bold', fontSize:13}}>Experience:</Text>
+                                                   
+                                                </CardItem>
+                                                <View>
+                                            
+                                                        <Text>{item.jobExperience}</Text>
+                                                    
+                                                </View>
+                                                <CardItem style={Style.jobDesc}>
+                                                    <Text style={{fontWeight: 'bold', fontSize:13}}>Qualification:</Text>
+                                                   
+                                                </CardItem>
+                                                <View>
+                                                    <Text>{item.job_qualification}</Text>
+                                                </View>
+                                                <CardItem style={Style.jobDesc}>
+                                                    <Text style={{fontWeight: 'bold', fontSize:13}}>Skills:</Text>
+                                                   
+                                                </CardItem>
+                                                <View>
+                                            
+                                                        <Text>{item.ref_skills}</Text>
+                                                    
+                                                </View>
+     
+                                                <CardItem style={{ justifyContent: 'center' }}>
 
-                                        <CardItem style={{ justifyContent: 'center' }}>
-
-                                            <Button rounded primary onPress={() => { this.setState({ key: item.key }) }}>
-                                                <Text>Hire</Text>
-                                            </Button>
-                                        </CardItem>
-                                    </Card>
+                                                    <Button rounded primary onPress={() => { this.setState({ key: item.key }), this.displayModal(true) }}>
+                                                        <Text style={{ fontWeight: 'bold', fontFamily: "CerealMedium" }}>Hire Now</Text>
+                                                    </Button>
+                                                </CardItem>
+                                            </Card>
+                                    </View>
                                 )
                             }}
                         />

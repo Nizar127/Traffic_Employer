@@ -45,7 +45,8 @@ export default class Profile extends Component {
             fullname: '',
             email: '',
             key: '',
-            phonenumber: '',
+            phoneNum:'',
+            description: '',
             profileImage: '',
             keyplayer: '',
             uniqueId: '',
@@ -56,6 +57,7 @@ export default class Profile extends Component {
             worktype: '',
             salary: '',
             peoplenum: '',
+            address:'',
             show: true,
             newContact: "",
             mytext: '',
@@ -81,7 +83,9 @@ export default class Profile extends Component {
                 address,
                 skills
             })
+            console.log("doc", doc)
         });
+      
         //this.unsubscribe = firebase.firestore().collection('Users').onSnapshot(this.getCollection);
     }
 
@@ -223,7 +227,7 @@ export default class Profile extends Component {
                         </CardItem>
                     </Card>
 
-
+                
                      <Card>
                         <CardItem header bordered>
 
@@ -245,7 +249,7 @@ export default class Profile extends Component {
                             </Content>
                         </CardItem>
                     </Card>
-                     
+                   
 
 
 
